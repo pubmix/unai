@@ -192,8 +192,6 @@ classroom.addFile(file: file1)
 // Remove file from the classroom
 classroom.removeFile(file: file1
                      
-                     class DigitalClassroom {
-    // ...
     
     func addFile(file: File) {
         if containsSuspiciousContent(content: file.name) {
