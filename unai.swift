@@ -66,6 +66,53 @@ func getFileByName(name: String) -> File? {
 }
 }
 
+ var privateChats: [String: [User]] // Dictionary of private chats keyed by a unique ID
+    
+    init(accessCode: String, admin: User) {
+        // ...
+        self.privateChats = [:]
+    }
+    
+    func addChatLog(chatLog: String) {
+        if chatLog.contains("#study") {
+            // Parse the usernames from the chat log using regex
+            let regex = try! NSRegularExpression(pattern: "@([a-zA-Z0-9_]+)")
+            let matches = regex.matches(in: chatLog, range: NSRange(chatLog.startIndex..., in: chatLog))
+            let selectedUsers = matches.map { match in
+                String(chatLog[Range(match.range(at: 1), in: chatLog)!])
+            }.compactMap { username in
+                self.users.first(where: { $0.username == username })
+            }
+            
+            // If there are selected users, create a new private chat
+            if !selectedUsers.isEmpty {
+                let chatID = UUID().uuidString // Generate a unique ID for the private chat
+                self.privateChats[chatID] = selectedUsers
+                let privateChatLog = "\(self.admin.username) started a private chat with \(selectedUsers.map({ $0.username }).joined(separator: ", ")):\n"
+                self.privateChats[chatID]?.forEach({ user in
+                    user.addNotification(notification: privateChatLog)
+                })
+                self.privateChats[chatID]?.append(self.admin)
+                let message = chatLog.replacingOccurrences(of: "#study", "").trimmingCharacters(in: .whitespaces)
+                addPrivateChatLog(chatLog: message, chatID: chatID)
+                return
+            }
+        }
+        
+        // If there are no selected users, add the chat log to the main chat
+        self.chatLogs.append(chatLog)
+    }
+    
+    func addPrivateChatLog(chatLog: String, chatID: String) {
+        let privateChatLog = "\(self.admin.username): \(chatLog)"
+        self.privateChats[chatID]?.forEach({ user in
+            user.addNotification(notification: privateChatLog)
+        })
+    }
+    
+    // ...
+}
+
 class User {
 var username: String
 var isAdmin: Bool
@@ -93,8 +140,6 @@ var name: String
 var owner: User
 var annotations: [Annotation]
 
-swift
-Copy code
 init(name: String, owner: User) {
     self.name = name
     self.owner = owner
@@ -121,8 +166,6 @@ var type: AnnotationType
 var user: User
 var content: String
 
-swift
-Copy code
 init(type: AnnotationType, user: User, content: String) {
     self.type = type
     self.user = user
@@ -148,3 +191,16 @@ classroom.addFile(file: file1)
 
 // Remove file from the classroom
 classroom.removeFile(file: file1
+                     
+                     class DigitalClassroom {
+    // ...
+    
+    func addFile(file: File) {
+        if containsSuspiciousContent(content: file.name) {
+            self.admin.addNotification(notification: "\(file.owner.username)'s file \(file.name) contains suspicious content.")
+        } else {
+            self.files.append(file)
+        }
+    }
+    
+
