@@ -5,8 +5,7 @@ var users: [User]
 var chatLogs: [String]
 var files: [File]
 
-swift
-Copy code
+
 init(accessCode: String, admin: User) {
     self.accessCode = accessCode
     self.admin = admin
